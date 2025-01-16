@@ -1,12 +1,5 @@
-#include <iostream>
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include "Utils.h"
 
-#pragma comment (lib, "Ws2_32.lib")
-
-#define DEFAULT_PORT "27015"
-#define DEFAULT_IP	 "127.0.0.1"
-#define DEFAULT_BUFFLEN 512
 
 int main(int argc, char* argv[])
 {
@@ -87,18 +80,21 @@ int main(int argc, char* argv[])
 
 	printf("Bytes sent: %d.\n", iResult);
 
+
+	int sendResult = sendFile(ConnectSocket, argv[0]);
+
 	// Shutdown the connection since no more data woll be sent
-	iResult = shutdown(ConnectSocket, SD_SEND);
+	/*iResult = shutdown(ConnectSocket, SD_SEND);
 	if(iResult == SOCKET_ERROR)
 	{
 		printf("Error shutting down. Error: %d.\n", WSAGetLastError());
 		closesocket(ConnectSocket);
 		WSACleanup();
 		return -1;
-	}
+	}*/
 
 	// Receive until the peer closes the connection
-	do
+	/*do
 	{
 		iResult = recv(ConnectSocket, recvbuf, recvbufflen, 0);
 		if (iResult > 0)
@@ -113,7 +109,49 @@ int main(int argc, char* argv[])
 		{
 			printf("Receive failed with error: %d\n", WSAGetLastError());
 		}
-	} while (iResult > 0);
+	} while (iResult > 0);*/
+	
+	char buff[256];
+	while (true)
+	{
+		//printf("Enter message to send.\n");
+		//scanf_s("%s", buff, (unsigned)_countof(buff));
+
+		//if (strcmp(buff, "QUIT") == 0)
+		//{
+		//	printf("Exiting...\n");
+		//	iResult = send(ConnectSocket, buff, strlen(sendBuff), 0);
+		//	if (iResult == SOCKET_ERROR)
+		//	{
+		//		printf("Error shutting down. Error: %d.\n", WSAGetLastError());
+		//		closesocket(ConnectSocket);
+		//		WSACleanup();
+		//		return -1;
+		//	}
+		//}
+		//iResult = send(ConnectSocket, buff, strlen(sendBuff), 0);
+		//if (iResult == SOCKET_ERROR)
+		//{
+		//	printf("Error shutting down. Error: %d.\n", WSAGetLastError());
+		//	closesocket(ConnectSocket);
+		//	WSACleanup();
+		//	return -1;
+		//}
+		//// Receive data from the server
+		//iResult = recv(ConnectSocket, recvbuf, recvbufflen, 0);
+		//if (iResult > 0) {
+		//	recvbuf[iResult] = '\0'; // Null-terminate received data
+		//	printf("Bytes received: %d\nMessage: %s\n", iResult, recvbuf);
+		//}
+		//else if (iResult == 0) {
+		//	printf("Connection closed by server.\n");
+		//	break;
+		//}
+		//else {
+		//	printf("Receive failed: %d\n", WSAGetLastError());
+		//	break;
+		//}
+	}
 
 	//Clean up
 	closesocket(ConnectSocket);

@@ -1,12 +1,4 @@
-#include <iostream>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-
-// Need to link with Ws2_32.lib
-#pragma comment (lib, "Ws2_32.lib")
-
-#define DEFAULT_PORT "27015"
-#define DEFAULT_BUFFLEN 512
+#include "Utils.h"
 
 int main(int argc, char* argv[])
 {
@@ -68,6 +60,56 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+
+
+	// If only need to connect to one client, close the listenig socket
+	//closesocket(ListenSocket);
+
+	// To receive and send data on a socket
+	char recvbuff[DEFAULT_BUFFLEN];
+	int iSendResult;
+	int recvbufflen = DEFAULT_BUFFLEN;
+
+	// Receive until the peer shuts down the connection
+	//do
+	//{
+	//	iResult = recv(ClientSocket, recvbuff, recvbufflen, 0);
+
+	//	if (iResult > 0)
+	//	{
+	//		printf("Bytes received: %d.\n", iResult);
+	//		if (iResult < recvbufflen)
+	//		{
+	//			recvbuff[iResult] = '\0';
+	//			printf_s("Message: %s\n", recvbuff);
+	//		}
+	//		// Echo the buffer back to the sender
+	//		iSendResult = send(ClientSocket, recvbuff, iResult, 0);
+	//		if (iSendResult == SOCKET_ERROR)
+	//		{
+	//			printf("send failed: %d.\n", WSAGetLastError());
+	//			closesocket(ClientSocket);
+	//			WSACleanup();
+	//			return -1;
+	//		}
+
+	//		printf("Bytes sent: %d\n", iSendResult);
+	//	}
+	//	else if (iResult == 0)
+	//	{
+	//		printf("Connection closing...\n");
+	//	}
+	//	else
+	//	{
+	//		printf("recv failed: %d.\n", WSAGetLastError());
+	//		closesocket(ClientSocket);
+	//		WSACleanup();
+	//		return -1;
+	//	}
+
+	//} while (iResult > 0);
+	// 
+	
 	// Accepting a Connection
 	SOCKET ClientSocket = INVALID_SOCKET;
 	ClientSocket = accept(ListenSocket, NULL, NULL);
@@ -79,37 +121,35 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	// If only need to connect to one client, close the listenig socket
-	closesocket(ListenSocket);
-
-	// To receive and send data on a socket
-	char recvbuff[DEFAULT_BUFFLEN];
-	int iSendResult;
-	int recvbufflen = DEFAULT_BUFFLEN;
-
-	// Receive until the peer shuts down the connection
-	do
+	while (true)
 	{
-		iResult = recv(ClientSocket, recvbuff, recvbufflen, 0);
+		iResult = recv(ClientSocket, recvbuff, recvbufflen - 1, 0);
 
 		if (iResult > 0)
 		{
 			printf("Bytes received: %d.\n", iResult);
-			if (iResult < recvbufflen)
-			{
-				recvbuff[iResult] = '\0';
-				printf_s("Message: %s\n", recvbuff);
-			}
+
+			recvbuff[iResult] = '\0';
+			printf_s("Message: %s\n", recvbuff);
+
 			// Echo the buffer back to the sender
 			iSendResult = send(ClientSocket, recvbuff, iResult, 0);
 			if (iSendResult == SOCKET_ERROR)
 			{
 				printf("send failed: %d.\n", WSAGetLastError());
+
+				// shutdown the send half of the connection since no more data will be sent
+				iResult = shutdown(ClientSocket, SD_SEND);
+				if (iResult == SOCKET_ERROR) {
+					printf("shutdown failed: %d\n", WSAGetLastError());
+					closesocket(ClientSocket);
+					WSACleanup();
+					return 1;
+				}
 				closesocket(ClientSocket);
 				WSACleanup();
 				return -1;
 			}
-
 			printf("Bytes sent: %d\n", iSendResult);
 		}
 		else if (iResult == 0)
@@ -123,20 +163,9 @@ int main(int argc, char* argv[])
 			WSACleanup();
 			return -1;
 		}
-
-	} while (iResult > 0);
-
-	// shutdown the send half of the connection since no more data will be sent
-	iResult = shutdown(ClientSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR) {
-		printf("shutdown failed: %d\n", WSAGetLastError());
-		closesocket(ClientSocket);
-		WSACleanup();
-		return 1;
 	}
-	
+
 	// cleanup
-	closesocket(ClientSocket);
 	WSACleanup();
 
 	getchar();
