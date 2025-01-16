@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSync_Client", "FileSync_Proj\FileSync_Proj.vcxproj", "{419E502A-D6F8-4B70-8FCA-4382707A280D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A2F0A59-2380-4F28-8794-677D397251AC} = {5A2F0A59-2380-4F28-8794-677D397251AC}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSync_Server", "FileSync_Server\FileSync_Server.vcxproj", "{19E9A767-DAA2-4147-A103-B6F621DCA75E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A2F0A59-2380-4F28-8794-677D397251AC} = {5A2F0A59-2380-4F28-8794-677D397251AC}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkUtils", "NetworkUtils\NetworkUtils.vcxproj", "{5A2F0A59-2380-4F28-8794-677D397251AC}"
 EndProject
