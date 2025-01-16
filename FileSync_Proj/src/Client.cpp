@@ -4,7 +4,7 @@
 
 #pragma comment (lib, "Ws2_32.lib")
 
-#define DEFAULT_PORT "12345"
+#define DEFAULT_PORT "27015"
 #define DEFAULT_IP	 "127.0.0.1"
 #define DEFAULT_BUFFLEN 512
 
