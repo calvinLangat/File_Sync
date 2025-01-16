@@ -4,7 +4,9 @@ int main(int argc, char* argv[])
 {
 	WSADATA wsaData;
 	int iResult;
-	struct addrinfo* result = NULL, * ptr = NULL, hints = {};
+	struct addrinfo* result = NULL, * ptr = NULL, hints;
+
+	ZeroMemory(&hints, sizeof(hints));
 
 	// Initialize winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);

@@ -7,8 +7,10 @@ int main(int argc, char* argv[])
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	struct addrinfo *result = NULL,
 					*ptr	= NULL,
-					hints	= {};
+					hints;
 
+	ZeroMemory(&hints, sizeof(hints));
+	
 	const char* sendBuff = "this is a test.";
 	char recvbuf[DEFAULT_BUFFLEN];
 	int iResult;
@@ -81,7 +83,7 @@ int main(int argc, char* argv[])
 	printf("Bytes sent: %d.\n", iResult);
 
 
-	int sendResult = sendFile(ConnectSocket, argv[0]);
+	size_t sendResult = sendFile(ConnectSocket, argv[0]);
 
 	// Shutdown the connection since no more data woll be sent
 	/*iResult = shutdown(ConnectSocket, SD_SEND);

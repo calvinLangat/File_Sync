@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-int sendFile(SOCKET ConnectSocket, const std::string& filePath)
+size_t sendFile(SOCKET ConnectSocket, const std::string& filePath)
 {
 	std::string fileName = std::filesystem::path(filePath).filename().string();
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
@@ -16,7 +16,7 @@ int sendFile(SOCKET ConnectSocket, const std::string& filePath)
 
 	// Send the file name and size
 	std::string metadata = fileName + "|" + std::to_string(fileSize);
-	int iSendResult = send(ConnectSocket, metadata.c_str(), metadata.size(), 0);
+	size_t iSendResult = send(ConnectSocket, metadata.c_str(), metadata.size(), 0);
 
 	return iSendResult;
 }

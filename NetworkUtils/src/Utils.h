@@ -11,4 +11,4 @@
 #define DEFAULT_IP	 "127.0.0.1"
 #define DEFAULT_BUFFLEN 512
 
-int sendFile(SOCKET ConnectSocket, const std::string& filePath);
+size_t sendFile(SOCKET ConnectSocket, const std::string& filePath);
