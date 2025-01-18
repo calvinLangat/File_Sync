@@ -10,5 +10,3 @@
 #define DEFAULT_PORT "27015"
 #define DEFAULT_IP	 "127.0.0.1"
 #define DEFAULT_BUFFLEN 512
-
-size_t sendFile(SOCKET ConnectSocket, const std::string& filePath);
