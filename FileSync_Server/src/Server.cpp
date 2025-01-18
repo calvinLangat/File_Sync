@@ -62,22 +62,62 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	// Accept sockets and spawn new threads to handle
+	while (true)
+	{
+		// Accepting a Connection
+		SOCKET ClientSocket = INVALID_SOCKET;
+		ClientSocket = accept(ListenSocket, NULL, NULL);	// This is blocking
+		if (ClientSocket == INVALID_SOCKET)
+		{
+			printf("Failed to accept socket: %d\n", WSAGetLastError());
+			closesocket(ListenSocket);
+			WSACleanup();
+			return -1;
+		}
+
+		// Copying because the ClientSocket is overwritten
+		// in the while loop before the new thread can use it.
+		SOCKET ThreadSocket = ClientSocket;
+
+		HANDLE hThread = CreateThread(
+			NULL,
+			8192,					// 8kb stack size
+			workerthread,			// Function to be executed
+			(void*)&ThreadSocket,	// Parameter to be passed to the func.
+			0,
+			NULL
+		);
+		if (hThread == NULL)
+		{
+			printf("Thread creation failed with error %d\n", GetLastError());
+		}
+		else
+		{
+			printf("New Client connected\n");
+		}
+	}
+
+
+	// cleanup
+	WSACleanup();
+
+	getchar();
+	return 0;
+}
+
+DWORD WINAPI workerthread(void* socketParam)
+{
 	// To receive and send data on a socket
 	char recvbuff[DEFAULT_BUFFLEN];
 	int iSendResult;
 	int recvbufflen = DEFAULT_BUFFLEN;
-	
-	// Accepting a Connection
-	SOCKET ClientSocket = INVALID_SOCKET;
-	ClientSocket = accept(ListenSocket, NULL, NULL);
-	if (ClientSocket == INVALID_SOCKET)
-	{
-		printf("Failed to accept socket: %d\n", WSAGetLastError());
-		closesocket(ListenSocket);
-		WSACleanup();
-		return -1;
-	}
+	int iResult;
 
+	// Dereference and copy the socket before socket is overwritten
+	SOCKET ClientSocket = *(SOCKET*)socketParam;
+
+	// This while true loop will live in a thread
 	while (true)
 	{
 		iResult = recv(ClientSocket, recvbuff, recvbufflen - 1, 0);	// Leave space for null-termination
@@ -106,7 +146,7 @@ int main(int argc, char* argv[])
 						printf("shutdown failed: %d\n", WSAGetLastError());
 						closesocket(ClientSocket);
 						WSACleanup();
-						return 1;
+						return -1;
 					}
 					closesocket(ClientSocket);
 					WSACleanup();
@@ -169,7 +209,7 @@ int main(int argc, char* argv[])
 		}
 		else if (iResult == 0)
 		{
-			printf("Connection closing...\n");
+			printf("Thread %d: Connection closing...\n", GetCurrentThreadId());
 			closesocket(ClientSocket);
 			break;
 
@@ -183,9 +223,5 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// cleanup
-	WSACleanup();
-
-	getchar();
 	return 0;
 }
