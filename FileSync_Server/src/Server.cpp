@@ -62,55 +62,10 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-
-
-	// If only need to connect to one client, close the listenig socket
-	//closesocket(ListenSocket);
-
 	// To receive and send data on a socket
 	char recvbuff[DEFAULT_BUFFLEN];
 	int iSendResult;
 	int recvbufflen = DEFAULT_BUFFLEN;
-
-	// Receive until the peer shuts down the connection
-	//do
-	//{
-	//	iResult = recv(ClientSocket, recvbuff, recvbufflen, 0);
-
-	//	if (iResult > 0)
-	//	{
-	//		printf("Bytes received: %d.\n", iResult);
-	//		if (iResult < recvbufflen)
-	//		{
-	//			recvbuff[iResult] = '\0';
-	//			printf_s("Message: %s\n", recvbuff);
-	//		}
-	//		// Echo the buffer back to the sender
-	//		iSendResult = send(ClientSocket, recvbuff, iResult, 0);
-	//		if (iSendResult == SOCKET_ERROR)
-	//		{
-	//			printf("send failed: %d.\n", WSAGetLastError());
-	//			closesocket(ClientSocket);
-	//			WSACleanup();
-	//			return -1;
-	//		}
-
-	//		printf("Bytes sent: %d\n", iSendResult);
-	//	}
-	//	else if (iResult == 0)
-	//	{
-	//		printf("Connection closing...\n");
-	//	}
-	//	else
-	//	{
-	//		printf("recv failed: %d.\n", WSAGetLastError());
-	//		closesocket(ClientSocket);
-	//		WSACleanup();
-	//		return -1;
-	//	}
-
-	//} while (iResult > 0);
-	// 
 	
 	// Accepting a Connection
 	SOCKET ClientSocket = INVALID_SOCKET;
@@ -125,7 +80,7 @@ int main(int argc, char* argv[])
 
 	while (true)
 	{
-		iResult = recv(ClientSocket, recvbuff, recvbufflen - 1, 0);
+		iResult = recv(ClientSocket, recvbuff, recvbufflen - 1, 0);	// Leave space for null-termination
 
 		if (iResult > 0)
 		{
@@ -134,29 +89,90 @@ int main(int argc, char* argv[])
 			recvbuff[iResult] = '\0';
 			printf_s("Message: %s\n", recvbuff);
 
-			// Echo the buffer back to the sender
-			iSendResult = send(ClientSocket, recvbuff, iResult, 0);
-			if (iSendResult == SOCKET_ERROR)
+			// If we got thr Upload Command, we start the procedure.
+			if (strcmp(recvbuff, "Upload") == 0)
 			{
-				printf("send failed: %d.\n", WSAGetLastError());
+				const char* reply = "ACK Upload";
 
-				// shutdown the send half of the connection since no more data will be sent
-				iResult = shutdown(ClientSocket, SD_SEND);
-				if (iResult == SOCKET_ERROR) {
-					printf("shutdown failed: %d\n", WSAGetLastError());
+				// Send the ACK
+				iSendResult = send(ClientSocket, reply, strlen(reply), 0);
+				if (iSendResult == SOCKET_ERROR)
+				{
+					printf("send failed: %d.\n", WSAGetLastError());
+
+					// shutdown the send half of the connection since no more data will be sent
+					iResult = shutdown(ClientSocket, SD_SEND);
+					if (iResult == SOCKET_ERROR) {
+						printf("shutdown failed: %d\n", WSAGetLastError());
+						closesocket(ClientSocket);
+						WSACleanup();
+						return 1;
+					}
 					closesocket(ClientSocket);
 					WSACleanup();
-					return 1;
+					return -1;
 				}
-				closesocket(ClientSocket);
-				WSACleanup();
-				return -1;
+				printf("Bytes sent: %d\n", iSendResult);
+
+				// Await the file metadata
+				iResult = recv(ClientSocket, recvbuff, recvbufflen - 1, 0);
+
+				std::string metadata = recvbuff;
+				std::string fileName;
+				std::string fileSize_str;
+				int splitPOS = metadata.find('|');
+
+				if (splitPOS == std::string::npos) {
+					printf("Invalid metadata format.\n");
+					return -1;  // Handle error appropriately
+				}
+
+				// Safely extract fileName and fileSize_str
+				fileName = metadata.substr(0, splitPOS);
+				fileSize_str = metadata.substr(splitPOS + 1);
+
+				// Convert file size to size_t
+				size_t fileSize = strtoull(fileSize_str.c_str(), NULL, 10);
+
+				printf("File name: %s\nFile size: %zu bytes\n", fileName.c_str(), fileSize);
+
+				// Create the file in the directory
+				size_t receivedBytes = 0;
+				char filebuff[4096];
+				std::string filePath = "D:\\MEGA\\Documents\\Code\\playground\\" + fileName;
+				std::ofstream file(filePath, std::ios::binary);
+				if (!file.is_open())
+				{
+					printf("Failed to create file");
+					break;
+				}
+
+				// Start receiving the file
+				printf("Receiving file...\n");
+				while (receivedBytes < fileSize)
+				{
+					int bytes = recv(ClientSocket, filebuff, sizeof(filebuff), 0);
+					file.write(filebuff, bytes);
+					receivedBytes += bytes;
+				}
+				file.close();
+
+				if (receivedBytes != fileSize)
+				{
+					printf("File size and bytes received mismatch.\n");
+				}
+				else
+				{
+					printf("File received successfully.\n");
+				}
 			}
-			printf("Bytes sent: %d\n", iSendResult);
 		}
 		else if (iResult == 0)
 		{
 			printf("Connection closing...\n");
+			closesocket(ClientSocket);
+			break;
+
 		}
 		else
 		{
