@@ -30,8 +30,30 @@ int main(int argc, char* argv[])
 			perror("ip address not supported");
 			return -1;
 		}
-		
 	}
+
+	status = connect(clientfd, (sockaddr * )&servr_address, sizeof(servr_address));
+	if(status == -1)
+	{
+		perror("Could not connect");
+		return -1;
+	}
+
+	const char* msg = "Hello";
+	size_t sent_bytes = send(clientfd, msg, strlen(msg), 0);
+	if(sent_bytes > 0)
+	{
+		printf("msg sent successfully.\n");
+	}
+	else if(sent_bytes == 0)
+	{
+		printf("Error: No bytes sent.\n");
+	}
+	else if(sent_bytes == -1)
+	{
+		perror("Error on sending message");
+	}
+
 
 	close(clientfd);
 	return 0;
