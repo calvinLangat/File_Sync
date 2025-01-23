@@ -3,6 +3,7 @@
 int main(int argc, char* argv[])
 {
 	int status, clientfd, result;
+	int uid = 123456;
 	struct sockaddr_in servr_address;
 
 	clientfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,8 +40,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	const char* msg = "Hello";
-	size_t sent_bytes = send(clientfd, msg, strlen(msg), 0);
+	//const char* msg = "Hello";
+	//size_t sent_bytes = send(clientfd, msg, strlen(msg), 0);
+	
+	// 1. Send the UID
+	size_t sent_bytes = send(clientfd, &uid, sizeof(int), 0);
 	if(sent_bytes > 0)
 	{
 		printf("msg sent successfully.\n");
@@ -53,6 +57,7 @@ int main(int argc, char* argv[])
 	{
 		perror("Error on sending message");
 	}
+
 
 
 	close(clientfd);
